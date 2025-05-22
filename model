@@ -78,8 +78,8 @@ from sklearn.model_selection import train_test_split
 trainX, testX, trainY, testY = train_test_split(
     X, y, 
     test_size=0.2, 
-    random_state=42,   # Her seferinde aynı bölünme
-    #stratify=y         # Sınıf dağılımı korunur
+    random_state=42,   
+    #stratify=y         
 )
 
 sc=StandardScaler()
@@ -89,7 +89,7 @@ trainX_scaled = scaler.transform(trainX)
 testX_scaled = scaler.transform(testX)
 
 mlp = MLPClassifier(
-    hidden_layer_sizes=(128,128,64),  # 2 hidden layer
+    hidden_layer_sizes=(128,128,64),  
     activation='relu',
     solver='adam',
     learning_rate_init=0.001,
