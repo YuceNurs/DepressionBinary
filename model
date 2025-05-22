@@ -69,5 +69,94 @@ Precision: 0.88
 F1: 0.86
 Auc: 0.84
 ############################################################################################
+#DNN;
+X = df.drop('Depression', axis=1)
+y = df['Depression']
 
+from sklearn.model_selection import train_test_split
+
+trainX, testX, trainY, testY = train_test_split(
+    X, y, 
+    test_size=0.2, 
+    random_state=42,   # Her seferinde aynı bölünme
+    #stratify=y         # Sınıf dağılımı korunur
+)
+
+sc=StandardScaler()
+
+scaler = sc.fit(trainX)
+trainX_scaled = scaler.transform(trainX)
+testX_scaled = scaler.transform(testX)
+
+mlp = MLPClassifier(
+    hidden_layer_sizes=(128,128,64),  # 2 hidden layer
+    activation='relu',
+    solver='adam',
+    learning_rate_init=0.001,
+    alpha=0.0001,  # L2 regularization
+    batch_size=256,
+    early_stopping=True,
+    validation_fraction=0.1,
+    max_iter=500,
+    random_state=42
+) 
+mlp.fit(trainX, trainY)
+y_pred = mlp.predict(testX)
+print('Test Doğruluk (Accuracy): {:.2f}'.format(accuracy_score(testY, y_pred)))
+
+
+cm = confusion_matrix(testY, y_pred)
+plt.figure(figsize=(6, 4))
+sns.heatmap(cm, annot=True, fmt='d', cmap='Reds')
+plt.xlabel('Tahmin')
+plt.ylabel('Gerçek')
+plt.title('Confusion Matrix')
+plt.show()
+
+model = Sequential([
+    Dense(512, activation='relu', input_shape=(trainX.shape[1],)),
+    Dropout(0.4),
+    Dense(256, activation='relu'),
+    Dropout(0.4),
+    Dense(256, activation='relu'),
+    Dropout(0.4),
+    Dense(128, activation='relu'),
+    Dropout(0.3),
+    Dense(1, activation='sigmoid')])
+
+model.compile(
+    optimizer=Adam(learning_rate=0.0001),
+    loss='binary_crossentropy',
+    metrics=['accuracy'])
+
+early_stop = EarlyStopping(
+    monitor='val_loss',
+    patience=10,
+    restore_best_weights=True)
+
+history = model.fit(
+    trainX, trainY,
+    validation_split=0.2,
+    epochs=150,
+    batch_size=256,
+    callbacks=[early_stop],
+    verbose=1)
+
+y_pred_prob = model.predict(testX)
+y_pred = (y_pred_prob > 0.5).astype(int)
+
+print("Accuracy: {:.4f}".format(accuracy_score(testY, y_pred)))
+print("\nClassification Report:\n", classification_report(testY, y_pred))
+##########################################################################
+Classification Report:
+               precision    recall  f1-score   support
+
+       False       0.82      0.79      0.81      2343
+        True       0.85      0.87      0.86      3238
+
+    accuracy                           0.84      5581
+   macro avg       0.84      0.83      0.83      5581
+weighted avg       0.84      0.84      0.84      5581
+##########################################################################
+SVM;
 
