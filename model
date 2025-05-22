@@ -160,3 +160,21 @@ weighted avg       0.84      0.84      0.84      5581
 ##########################################################################
 SVM;
 
+param_grid = {
+    'svm__C': [0.1, 1, 10],
+    'svm__gamma': ['scale', 0.01, 0.001],
+    'svm__kernel': ['rbf', 'linear']
+}
+
+svm_pipeline = Pipeline([
+    ("scaler", StandardScaler()),
+    ("svm", SVC(probability=True, random_state=42))
+])
+
+grid = GridSearchCV(svm_pipeline, param_grid, cv=5, scoring='accuracy', n_jobs=-1)
+grid.fit(X_train, y_train)
+
+print("Best Params:", grid.best_params_)
+print("Best Accuracy:", grid.best_score_)
+
+
