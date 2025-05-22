@@ -1,0 +1,196 @@
+df = pd.read_csv('C:\\Users\\yucen\\Downloads\\student_depression_dataset.csv') 
+df_head = df.head()
+df_description= df.describe()
+#df.shape, df.columns, df_head, df_description, df.info()
+
+
+
+cat_cols = [col for col in df.columns]
+
+#cat_cols = [col for col in df.columns if str(df[col].dtypes) in ["category","object","bool"]]
+num_but_cat= [col for col in df.columns if df[col].nunique() < 10 and df[col].dtypes in ["int64","float64"]]
+cat_cols = cat_cols + num_but_cat
+num_cols = [col for col in df.columns if df[col].dtypes in ["int64", "float64"]]
+
+num_cols =[col for col in num_cols if col not in cat_cols]
+def cat_summary(dataFrame, col_name, plot=False):
+    print(pd.DataFrame({col_name: dataFrame[col_name].value_counts(),
+                        "Ratio": 100* dataFrame[col_name].value_counts()/len(dataFrame)}))
+    print("###################################")
+
+    if plot:
+        sns.countplot(x=dataFrame[col_name], data = dataFrame)
+        plt.show(block = True)
+
+cat_summary(df,"Depression", plot= True)
+
+def num_summary(dataframe, numerical_col, plot=False):
+    quantiles =[0.01,0.05,0.25,0.50,0.75,0.90,0.99,1.00]
+    print(dataframe[numerical_col].describe(quantiles).T)
+
+    if plot:
+        dataframe[numerical_col].hist()
+        plt.xlabel(numerical_col)
+        plt.title(numerical_col)
+        plt.show(block=True)
+
+for col in num_cols:
+    num_summary(df,col, plot=True)
+    
+num_summary(df,["Age","Academic Pressure","Work Pressure","CGPA","Study Satisfaction","Job Satisfaction","Work/Study Hours",'Depression'], plot=True)
+
+
+def grab_col_names(dataframe, cat_th=10, car_th=20):
+    cat_cols = [col for col in dataframe.columns if dataframe[col].dtypes == "O"]
+    num_but_cat = [col for col in dataframe.columns if
+                   dataframe[col].nunique() < cat_th and dataframe[col].dtypes != "O"]
+    cat_but_car = [col for col in dataframe.columns if
+                   dataframe[col].nunique() > car_th and dataframe[col].dtypes == "O"]
+    cat_cols = cat_cols + num_but_cat
+    cat_cols = [col for col in cat_cols if col not in cat_but_car]
+
+    num_cols = [col for col in dataframe.columns if dataframe[col].dtypes != "O"]
+    num_cols = [col for col in num_cols if col not in num_but_cat]
+
+    print(f"Observations:{dataframe.shape[0]}")
+    print(f"Variables:{dataframe.shape[1]}")
+    print(f'cat_cols:{len(cat_cols)}')
+    print(f'num_cols:{len(num_cols)}')
+    print(f'cat_but_car:{len(cat_but_car)}')
+    print(f'num_but_cat:{len(num_but_cat)}')
+
+    return cat_cols, num_cols, cat_but_car
+grab_col_names(df)
+
+cat_cols, num_cols, cat_but_car = grab_col_names(df)
+
+
+num_but_cat = ["Academic Pressure", 'Work Pressure', 'Study Satisfaction', 'Job Satisfaction', 'Depression']
+
+for col in num_but_cat:
+    plt.figure(figsize=(6, 4))
+    sns.countplot(data=df, x=col, palette="viridis")
+    plt.title(f"{col} - Count Plot")
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.show()
+
+# Kardinal kategorik olanlar (çok sınıflı)
+cat_but_car = [col for col in df.columns if df[col].dtype == 'O' and df[col].nunique() > 20]
+
+# Numerik görünüp aslında kategorik olanlar
+num_but_cat = [col for col in df.columns if df[col].dtype != 'O' and df[col].nunique() < 20]
+
+print("cat_but_car:", cat_but_car)
+print("num_but_cat:", num_but_cat)
+
+cat_but_car = ['City', 'Degree']
+
+#for col in cat_but_car:
+#    plt.figure(figsize=(10, 4))
+#    top_20 = df[col].value_counts().nlargest(20)
+#    sns.barplot(x=top_20.index, y=top_20.values, palette="magma")
+#    plt.title(f"{col} - Top 20 Kategoriler")
+#    plt.xticks(rotation=90)
+#    plt.ylabel("Frekans")
+#    plt.xlabel(col)
+#    plt.tight_layout()
+ #   plt.show()
+
+for col in ['Degree', 'City']:
+    df[col] = pd.factorize(df[col])[0]
+# LABEL ENCODING
+def label_encoder(dataframe, binary_col):
+    labelencoder = LabelEncoder()
+    dataframe[binary_col] = labelencoder.fit_transform(dataframe[binary_col])
+    return dataframe
+
+binary_cols = [col for col in df.columns if df[col].dtypes == "O" and df[col].nunique() == 2]
+binary_cols
+for col in binary_cols:
+    df = label_encoder(df, col)
+# One-Hot Encoding İşlemi
+# cat_cols listesinin güncelleme işlemi
+cat_cols = [col for col in cat_cols if col not in binary_cols and col not in ["DEPRESSION"]]
+cat_cols
+def one_hot_encoder(dataframe, categorical_cols, drop_first=False):
+    dataframe = pd.get_dummies(dataframe, columns=categorical_cols, drop_first=drop_first)
+    return dataframe
+df = one_hot_encoder(df, cat_cols, drop_first=True)
+df.head()
+
+num_cols
+scaler = StandardScaler()
+df[num_cols] = scaler.fit_transform(df[num_cols])
+
+df.head()
+df.shape
+
+print("Depression" in df.columns)  # True dönmeli
+print(df.columns.tolist())  # Emin o
+
+def grab_col_names(dataframe, cat_th=10, car_th=20):
+    """
+
+    Parameters
+    ----------
+    dataframe : dataframe
+      değişken isimleri alınmak istenen dataframe'dir.
+    cat_th : int, float
+      numerik fakat kategorik olan değişkenler için sınıf eşik değeri
+    car_th : int, float
+      kategorik fakat kardinal değişkenler için sınıf eşik değeri
+
+    Returns
+    -------
+    car_cols: list
+       kategorik değişken listesi
+    num_cols: list
+       numerik değişken listesi
+    cat_but_car: list
+       kategorik görünümlü kardinal değişken listesi
+
+    Notes
+    --------
+    cat_cols +num_cols + cat_but_car = toplam değişken sayısı
+    num_but_cat, cat_cols'un içerisinde
+    """
+
+
+    cat_cols = [col for col in dataframe.columns if dataframe[col].dtypes == "O"]
+    num_but_cat = [col for col in dataframe.columns if
+                   dataframe[col].nunique() < cat_th and dataframe[col].dtypes != "O"]
+    cat_but_car = [col for col in dataframe.columns if
+                   dataframe[col].nunique() > car_th and dataframe[col].dtypes == "O"]
+    cat_cols = cat_cols + num_but_cat
+    cat_cols = [col for col in cat_cols if col not in cat_but_car]
+
+    num_cols = [col for col in dataframe.columns if dataframe[col].dtypes != "O"]
+    num_cols = [col for col in num_cols if col not in num_but_cat]
+
+    print(f"Observations:{dataframe.shape[0]}")
+    print(f"Variables:{dataframe.shape[1]}")
+    print(f'cat_cols:{len(cat_cols)}')
+    print(f'num_cols:{len(num_cols)}')
+    print(f'cat_but_car:{len(cat_but_car)}')
+    print(f'num_but_cat:{len(num_but_cat)}')
+
+    return cat_cols, num_cols, cat_but_car
+grab_col_names(df)
+
+cat_cols, num_cols, cat_but_car = grab_col_names(df)
+
+def target_summary_with_num(dataframe, target, numerical_col):
+    print(dataframe.groupby(target).agg({numerical_col: "mean"}), end="\n\n\n")
+
+for col in num_cols:
+    target_summary_with_num(df, "Depression_1", col)
+
+print(df.dtypes)
+
+#KORELASYON
+
+#f, ax = plt.subplots(figsize=[18, 13])
+#sns.heatmap(df.corr(), annot=True, fmt=".2f", ax=ax, cmap="magma")
+#ax.set_title("Correlation Matrix", fontsize=20)
+#plt.show(block=True)
