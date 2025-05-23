@@ -180,21 +180,31 @@ print("Best Accuracy:", grid.best_score_)
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 
+param_grid = {
+    'svm__C':0.1,
+    'svm__gamma': 0.01,
+    'svm__kernel': 'linear'
+}
+
+
 svm_pipeline = Pipeline([
     ("scaler", StandardScaler()),
     ("svm", SVC(kernel="rbf", C=1.0, gamma="scale", probability=True, random_state=42))
 ])
 
 
+# Eğit ve tahmin et
 svm_pipeline.fit(trainX, trainY)
 y_pred = svm_pipeline.predict(testX)
 y_proba = svm_pipeline.predict_proba(testX)[:, 1]
 
+# Metrikler
 print(f"Accuracy: {round(accuracy_score(testY, y_pred), 2)}")
 print(f"Recall: {round(recall_score(testY, y_pred), 3)}")
 print(f"Precision: {round(precision_score(testY, y_pred), 2)}")
 print(f"F1: {round(f1_score(testY, y_pred), 2)}")
 print(f"AUC: {round(roc_auc_score(testY, y_proba), 2)}")
+
 ###################################################################
 Accuracy: 0.83
 Recall: 0.879
