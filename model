@@ -212,3 +212,102 @@ Precision: 0.84
 F1: 0.86
 AUC: 0.91
 #####################################################################
+#Naive Bayes
+# Naive Bayes
+from sklearn.metrics import precision_score
+from sklearn.metrics import recall_score
+from sklearn.metrics import f1_score
+
+
+nb_model = GaussianNB()
+
+nb_model.fit(trainX, trainY)
+
+predY = nb_model.predict(testX)
+
+
+accuracy = accuracy_score(testY, predY)
+precision = precision_score(testY, predY)
+recall = recall_score(testY, predY)
+f1 = f1_score(testY, predY)
+classification_rep = classification_report(testY, predY)
+
+
+print(f"Accuracy: {accuracy}")
+print(f"Precision: {precision}")
+print(f"Recall: {recall}")
+print(f"F1 Score: {f1}")
+print("\nClassification Report:\n")
+print(classification_rep)
+
+
+conf_matrix = confusion_matrix(y_test, y_pred)
+
+
+plt.figure(figsize=(8, 6))
+sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', xticklabels=nb_model.classes_, yticklabels=nb_model.classes_)
+plt.title('Confusion Matrix for Naive Bayes')
+plt.xlabel('Predicted')
+plt.ylabel('Actual')
+plt.show()
+####################################################################
+Accuracy: 0.766547192353644
+Precision: 0.8083228247162674
+Recall: 0.7868248772504092
+F1 Score: 0.7974289861082314
+
+Classification Report:
+
+              precision    recall  f1-score   support
+
+           0       0.71      0.74      0.72      3482
+           1       0.81      0.79      0.80      4888
+
+    accuracy                           0.77      8370
+   macro avg       0.76      0.76      0.76      8370
+weighted avg       0.77      0.77      0.77      8370
+#######################################################################
+# logisitic regression model
+from sklearn.linear_model import LogisticRegression
+
+logistic_model = LogisticRegression()
+logistic_model.fit(X_train_scaled, trainY)
+
+predY = logistic_model.predict(X_test_scaled)
+
+accuracy = accuracy_score(testY,predY)
+precision = precision_score(testY, predY, average='weighted')  
+recall = recall_score(testY, predY, average='weighted')
+f1 = f1_score(testY, predY, average='weighted')
+classification_rep = classification_report(testY, predY)
+
+conf_matrix = confusion_matrix(testY, predY)
+
+print(f"Accuracy: {accuracy}")
+print(f"Precision: {precision}")
+print(f"Recall: {recall}")
+print(f"F1 Score: {f1}")
+print("\nClassification Report:\n")
+print(classification_rep)
+
+disp = ConfusionMatrixDisplay(confusion_matrix=conf_matrix, display_labels=logistic_model.classes_)
+disp.plot(cmap=plt.cm.Blues)
+plt.title("Confusion Matrix")
+plt.show()
+##############################################################
+Accuracy: 0.8389177566744311
+Precision: 0.8384120197864107
+Recall: 0.8389177566744311
+F1 Score: 0.8384155670806575
+
+Classification Report:
+
+              precision    recall  f1-score   support
+
+       False       0.82      0.79      0.80      2343
+        True       0.85      0.88      0.86      3238
+
+    accuracy                           0.84      5581
+   macro avg       0.84      0.83      0.83      5581
+weighted avg       0.84      0.84      0.84      5581
+#################################################################
